@@ -1,22 +1,20 @@
 # VoiceMix - MP3 Voice Processor
 
-A **desktop application** for Windows 11 that processes MP3 files containing multiple voice dialogs, identifies different voices, selects the smoothest voice, and converts all other voices to match it, creating a unified voice tone in the output file.
+A **web application** that processes MP3 files containing multiple voice dialogs, identifies different voices, selects the smoothest voice, and converts all other voices to match it, creating a unified voice tone in the output file.
 
-> **📌 Important:** VoiceMix is a **local desktop application**, not a web application. There is no URL/link to access it online. You need to install and run it on your computer. See [Getting the Application](#-getting-the-application) below.
+> **🌐 Web-Based:** VoiceMix is now a **web application**! Access it through your browser at `http://localhost:5000` after starting the server. Upload MP3 files and download the processed results directly from the dashboard.
 
 ## 📑 Table of Contents
-- [Getting the Application](#-getting-the-application)
-- [Quick Start - Access the Interface](#-quick-start---access-the-interface)
+- [Getting Started](#-getting-started)
+- [Quick Start - Launch Web App](#-quick-start---launch-web-app)
 - [Features](#features)
 - [Installation](#installation)
-- [Accessing the Interface](#️-accessing-the-interface)
 - [Usage](#usage)
-- [FAQ](#-faq)
 - [Documentation](#documentation)
 
-## 🔗 Getting the Application
+## 🔗 Getting Started
 
-**VoiceMix runs on your local computer** - there's no web version or online link.
+**VoiceMix runs as a local web server** on your computer.
 
 To get VoiceMix:
 
@@ -27,25 +25,32 @@ To get VoiceMix:
    ```
    📍 Repository: https://github.com/NipunTennakoon/voicemix
 
-2. **Download from Releases** (Coming Soon):
-   - Windows executable (.exe) will be available at: https://github.com/NipunTennakoon/voicemix/releases
-   - This allows you to run VoiceMix without installing Python
+2. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-After getting the application, see [Quick Start](#-quick-start---access-the-interface) to launch it.
+After installation, see [Quick Start](#-quick-start---launch-web-app) to launch the web server.
 
-## 🚀 Quick Start - Access the Interface
+## 🚀 Quick Start - Launch Web App
 
-**Already have it installed?** Launch the application in one command:
+**Launch the web application:**
 
 ```bash
 # Windows
-run_app.bat
+run_web.bat
 
 # macOS/Linux
-./run_app.sh
+./run_web.sh
 ```
 
-**First time user?** Set up and run:
+**Then access the dashboard in your browser:**
+- Open: `http://localhost:5000`
+- Upload MP3 files
+- Monitor processing progress
+- Download unified audio
+
+**First time user?** Set up dependencies first:
 
 ```bash
 # Windows
@@ -55,8 +60,6 @@ quick_start.bat
 ./quick_start.sh
 ```
 
-**Need help?** See the complete guide: [How to Access the Interface](docs/HOW_TO_RUN.md)
-
 ---
 
 ## Features
@@ -64,17 +67,18 @@ quick_start.bat
 - 🎤 **Speaker Diarization**: Automatically identify different speakers in audio files
 - ✨ **Voice Quality Evaluation**: Select the smoothest and most ideal voice
 - 🔄 **Voice Conversion**: Convert all voices to match the selected voice
-- 🖥️ **User-Friendly GUI**: Intuitive drag-and-drop interface built with PyQt6
+- 🌐 **Web Dashboard**: Intuitive web interface with drag-and-drop upload
 - 📊 **Real-Time Progress**: Visual feedback during processing
-- 💾 **Easy Export**: Save processed files with a single click
+- 💾 **Easy Download**: Download processed files with one click
 - ⚡ **GPU Acceleration**: Supports CUDA for faster processing
 
 ## Screenshots
 
-The application features a modern, clean interface with:
-- Drag-and-drop zone for MP3 files
-- Real-time progress bar
-- One-click processing and download
+The web application features a modern dashboard with:
+- Drag-and-drop zone for MP3 file uploads
+- Real-time progress bar with status updates
+- One-click download of processed files
+- Responsive design for all devices
 
 ## Requirements
 
@@ -148,21 +152,27 @@ The application features a modern, clean interface with:
 
 ### Option 2: Windows Executable (Coming Soon)
 
-A standalone `.exe` file will be available for Windows users who don't want to install Python. Download from the [Releases](https://github.com/NipunTennakoon/voicemix/releases) page.
+A standalone deployment option will be available in the future. For now, run the web server locally.
 
-## 🖥️ Accessing the Interface
+## 🌐 Accessing the Web Interface
 
-After installation, you have multiple ways to access the VoiceMix interface:
+After installation, launch the web server:
 
 ### Quick Launch (Recommended)
 ```bash
 # Navigate to project directory
 cd voicemix
 
-# Run the launcher script
-./run_app.sh     # macOS/Linux
-run_app.bat      # Windows
+# Run the web server
+./run_web.sh     # macOS/Linux
+run_web.bat      # Windows
 ```
+
+### Access the Dashboard
+1. Start the web server using the command above
+2. Open your browser
+3. Navigate to: `http://localhost:5000`
+4. You'll see the VoiceMix dashboard
 
 ### Manual Launch
 ```bash
@@ -170,41 +180,48 @@ run_app.bat      # Windows
 source venv/bin/activate  # macOS/Linux
 venv\Scripts\activate     # Windows
 
-# Then run the application
+# Then run the web application
 cd src
-python voicemix_app.py
+python web_app.py
 ```
+
+Then open `http://localhost:5000` in your browser.
 
 ### Troubleshooting Access Issues
 
 If the interface doesn't appear:
-1. **Verify installation:** `python verify_installation.py`
-2. **Check dependencies:** Make sure all requirements are installed
-3. **See detailed guide:** [How to Access the Interface](docs/HOW_TO_RUN.md)
-4. **Check logs:** Look at `voicemix.log` for error messages
-
-**Note:** VoiceMix is a desktop GUI application. You need a graphical environment (not just terminal) to access it.
+1. **Check if server is running:** Look for "Running on http://0.0.0.0:5000" message
+2. **Verify port is available:** Make sure port 5000 is not in use
+3. **Check firewall:** Ensure firewall allows connections to localhost:5000
+4. **Try different browser:** Chrome, Firefox, or Edge recommended
+5. **Check logs:** Look at `voicemix_web.log` for error messages
 
 ## Usage
 
-Once you've accessed the interface (see [How to Access](#-accessing-the-interface) above), follow these steps:
+Once you've launched the web server and accessed the dashboard:
 
-1. **Launch the application**
-   - Run `./run_app.sh` (or `run_app.bat` on Windows)
-   - Or run `python src/voicemix_app.py` from the project directory
-   - The VoiceMix window will appear
+1. **Launch the web application**
+   - Run `./run_web.sh` (or `run_web.bat` on Windows)
+   - Open browser and go to `http://localhost:5000`
+   - You'll see the VoiceMix dashboard
 
-2. **Select an MP3 file**
-   - Drag and drop an MP3 file into the application window, or
-   - Click "Browse Files" to select a file
+2. **Upload an MP3 file**
+   - **Drag and drop** an MP3 file into the upload zone, or
+   - Click **"Browse Files"** to select a file from your computer
+   - File will be uploaded automatically
 
-3. **Start processing**
-   - Click "Start Processing" button
-   - The application will:
-     - Analyze the audio to identify different speakers
-     - Evaluate voice quality for each speaker
-     - Select the best voice
-     - Convert other voices to match the selected voice
+3. **Monitor processing**
+   - Watch the progress bar showing processing status
+   - Status messages will update in real-time:
+     - "Loading audio file..."
+     - "Performing speaker diarization..."
+     - "Converting voices..."
+     - "Processing complete!"
+
+4. **Download the result**
+   - Once processing is complete, click **"Download Processed File"**
+   - The unified MP3 file will be downloaded to your computer
+   - Click **"Process Another File"** to start over
 
 4. **Save the result**
    - Once processing is complete, click "Save Processed File"
