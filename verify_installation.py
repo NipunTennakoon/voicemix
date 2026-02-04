@@ -166,12 +166,19 @@ def main():
     print(f"\n{BOLD}{'='*60}{RESET}")
     if all_ok:
         print(f"{GREEN}{BOLD}✓ All checks passed! VoiceMix is ready to use.{RESET}")
-        print(f"\nTo run the application:")
+        print(f"\n{BOLD}To access the interface:{RESET}")
+        print(f"  ./run_app.sh     # macOS/Linux")
+        print(f"  run_app.bat      # Windows")
+        print(f"\n  or manually:")
         print(f"  cd src")
         print(f"  python voicemix_app.py")
+        print(f"\n{BOLD}Need help?{RESET} See: docs/HOW_TO_RUN.md")
     elif not deps_ok:
         print(f"{YELLOW}{BOLD}⚠ Dependencies missing. Install them first:{RESET}")
         print(f"  pip install -r requirements.txt")
+        print(f"\n  Or run the quick start script:")
+        print(f"  ./quick_start.sh     # macOS/Linux")
+        print(f"  quick_start.bat      # Windows")
     else:
         print(f"{RED}{BOLD}✗ Some checks failed. Please review the output above.{RESET}")
     

@@ -2,6 +2,40 @@
 
 A desktop application for Windows 11 that processes MP3 files containing multiple voice dialogs, identifies different voices, selects the smoothest voice, and converts all other voices to match it, creating a unified voice tone in the output file.
 
+## 📑 Table of Contents
+- [Quick Start - Access the Interface](#-quick-start---access-the-interface)
+- [Features](#features)
+- [Installation](#installation)
+- [Accessing the Interface](#️-accessing-the-interface)
+- [Usage](#usage)
+- [Documentation](#documentation)
+
+## 🚀 Quick Start - Access the Interface
+
+**Already have it installed?** Launch the application in one command:
+
+```bash
+# Windows
+run_app.bat
+
+# macOS/Linux
+./run_app.sh
+```
+
+**First time user?** Set up and run:
+
+```bash
+# Windows
+quick_start.bat
+
+# macOS/Linux  
+./quick_start.sh
+```
+
+**Need help?** See the complete guide: [How to Access the Interface](docs/HOW_TO_RUN.md)
+
+---
+
 ## Features
 
 - 🎤 **Speaker Diarization**: Automatically identify different speakers in audio files
@@ -73,21 +107,69 @@ The application features a modern, clean interface with:
    pip install -r requirements.txt
    ```
 
-5. **Run the application**
+5. **Run the application** 🎉
    ```bash
    cd src
    python voicemix_app.py
    ```
+   
+   **Or use the convenient launcher:**
+   ```bash
+   # From the project root directory
+   ./run_app.sh  # macOS/Linux
+   # or
+   run_app.bat  # Windows
+   ```
+   
+   The application window will open with the VoiceMix interface!
 
 ### Option 2: Windows Executable (Coming Soon)
 
 A standalone `.exe` file will be available for Windows users who don't want to install Python. Download from the [Releases](https://github.com/NipunTennakoon/voicemix/releases) page.
 
+## 🖥️ Accessing the Interface
+
+After installation, you have multiple ways to access the VoiceMix interface:
+
+### Quick Launch (Recommended)
+```bash
+# Navigate to project directory
+cd voicemix
+
+# Run the launcher script
+./run_app.sh     # macOS/Linux
+run_app.bat      # Windows
+```
+
+### Manual Launch
+```bash
+# Activate virtual environment first
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate     # Windows
+
+# Then run the application
+cd src
+python voicemix_app.py
+```
+
+### Troubleshooting Access Issues
+
+If the interface doesn't appear:
+1. **Verify installation:** `python verify_installation.py`
+2. **Check dependencies:** Make sure all requirements are installed
+3. **See detailed guide:** [How to Access the Interface](docs/HOW_TO_RUN.md)
+4. **Check logs:** Look at `voicemix.log` for error messages
+
+**Note:** VoiceMix is a desktop GUI application. You need a graphical environment (not just terminal) to access it.
+
 ## Usage
 
+Once you've accessed the interface (see [How to Access](#-accessing-the-interface) above), follow these steps:
+
 1. **Launch the application**
-   - Run `python src/voicemix_app.py` from the project directory
-   - Or double-click the `.exe` file (if using the packaged version)
+   - Run `./run_app.sh` (or `run_app.bat` on Windows)
+   - Or run `python src/voicemix_app.py` from the project directory
+   - The VoiceMix window will appear
 
 2. **Select an MP3 file**
    - Drag and drop an MP3 file into the application window, or
@@ -104,6 +186,8 @@ A standalone `.exe` file will be available for Windows users who don't want to i
 4. **Save the result**
    - Once processing is complete, click "Save Processed File"
    - Choose where to save the unified MP3 file
+
+**For detailed usage instructions with screenshots, see the [User Guide](docs/USER_GUIDE.md)**
 
 ## How It Works
 
@@ -208,6 +292,19 @@ This is a simplified implementation suitable for demonstration and basic use cas
   - Ensure the input audio has good quality
   - Try files with clearer voice separation
   - Consider upgrading to neural-based voice conversion models
+
+**Issue**: Can't access the interface / Application won't start
+- **Solution**: See the comprehensive [How to Access the Interface](docs/HOW_TO_RUN.md) guide
+
+## Documentation
+
+Complete documentation is available in the `docs/` directory:
+
+- **[How to Access the Interface](docs/HOW_TO_RUN.md)** ⭐ - Step-by-step guide to launching VoiceMix
+- **[Setup Guide](docs/SETUP.md)** - Detailed installation for all platforms
+- **[User Guide](docs/USER_GUIDE.md)** - Complete usage instructions with examples
+- **[UI Guide](docs/UI_GUIDE.md)** - Interface navigation and features
+- **[Advanced Configuration](docs/ADVANCED_CONFIG.md)** - Customization options
 
 ## Contributing
 
