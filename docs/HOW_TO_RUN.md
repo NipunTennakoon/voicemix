@@ -2,6 +2,25 @@
 
 This guide provides simple, step-by-step instructions for accessing and launching the VoiceMix application.
 
+> **📌 Important Note:** VoiceMix is a **desktop application**, not a web application. There is no URL or web link to access it. You must download and run it locally on your computer.
+
+## 🔗 Don't Have VoiceMix Yet?
+
+If you don't have VoiceMix installed:
+
+1. **Get the code**: https://github.com/NipunTennakoon/voicemix
+   ```bash
+   git clone https://github.com/NipunTennakoon/voicemix.git
+   cd voicemix
+   ```
+
+2. **Or download Windows executable** (Coming Soon):
+   - https://github.com/NipunTennakoon/voicemix/releases
+
+After downloading, follow the installation instructions below.
+
+---
+
 ## Quick Access Methods
 
 ### Method 1: One-Command Launch (Easiest) ⭐
@@ -258,6 +277,24 @@ Once you've accessed the interface:
 | **Install Dependencies** | `pip install -r requirements.txt` |
 | **Activate venv (Unix)** | `source venv/bin/activate` |
 | **Activate venv (Windows)** | `venv\Scripts\activate` |
+| **Get VoiceMix** | `git clone https://github.com/NipunTennakoon/voicemix.git` |
+
+---
+
+## ❓ Frequently Asked Questions
+
+### Is there a URL/link to access VoiceMix?
+**No.** VoiceMix is a **desktop application**, not a web application. There's no URL to visit or web link to click. You need to:
+1. Download/clone from: https://github.com/NipunTennakoon/voicemix
+2. Install it on your computer
+3. Run it locally using the commands above
+
+### Where can I download VoiceMix?
+- **Repository**: https://github.com/NipunTennakoon/voicemix (clone with git)
+- **Releases**: https://github.com/NipunTennakoon/voicemix/releases (Windows .exe coming soon)
+
+### Do I need internet to use VoiceMix?
+No. Once installed, VoiceMix works **completely offline**. All processing happens on your local computer.
 
 ---
 

@@ -1,14 +1,37 @@
 # VoiceMix - MP3 Voice Processor
 
-A desktop application for Windows 11 that processes MP3 files containing multiple voice dialogs, identifies different voices, selects the smoothest voice, and converts all other voices to match it, creating a unified voice tone in the output file.
+A **desktop application** for Windows 11 that processes MP3 files containing multiple voice dialogs, identifies different voices, selects the smoothest voice, and converts all other voices to match it, creating a unified voice tone in the output file.
+
+> **📌 Important:** VoiceMix is a **local desktop application**, not a web application. There is no URL/link to access it online. You need to install and run it on your computer. See [Getting the Application](#-getting-the-application) below.
 
 ## 📑 Table of Contents
+- [Getting the Application](#-getting-the-application)
 - [Quick Start - Access the Interface](#-quick-start---access-the-interface)
 - [Features](#features)
 - [Installation](#installation)
 - [Accessing the Interface](#️-accessing-the-interface)
 - [Usage](#usage)
+- [FAQ](#-faq)
 - [Documentation](#documentation)
+
+## 🔗 Getting the Application
+
+**VoiceMix runs on your local computer** - there's no web version or online link.
+
+To get VoiceMix:
+
+1. **Clone from GitHub** (Recommended):
+   ```bash
+   git clone https://github.com/NipunTennakoon/voicemix.git
+   cd voicemix
+   ```
+   📍 Repository: https://github.com/NipunTennakoon/voicemix
+
+2. **Download from Releases** (Coming Soon):
+   - Windows executable (.exe) will be available at: https://github.com/NipunTennakoon/voicemix/releases
+   - This allows you to run VoiceMix without installing Python
+
+After getting the application, see [Quick Start](#-quick-start---access-the-interface) to launch it.
 
 ## 🚀 Quick Start - Access the Interface
 
@@ -295,6 +318,37 @@ This is a simplified implementation suitable for demonstration and basic use cas
 
 **Issue**: Can't access the interface / Application won't start
 - **Solution**: See the comprehensive [How to Access the Interface](docs/HOW_TO_RUN.md) guide
+
+## ❓ FAQ
+
+### Is VoiceMix a website or web application?
+**No.** VoiceMix is a **desktop application** that runs locally on your computer. There is no website or URL to visit. You need to:
+1. Download or clone the application from GitHub
+2. Install it on your computer
+3. Run it locally
+
+### Can I get a link to access the interface?
+VoiceMix doesn't have a web link or URL because it's not a web application. To access the interface:
+- **Repository link**: https://github.com/NipunTennakoon/voicemix (to download/clone)
+- **Run locally**: After installation, use `./run_app.sh` or `run_app.bat` to launch the desktop GUI
+
+See [Getting the Application](#-getting-the-application) for download options.
+
+### Where can I download VoiceMix?
+- **Source Code**: Clone from https://github.com/NipunTennakoon/voicemix
+- **Windows Executable**: Coming soon at https://github.com/NipunTennakoon/voicemix/releases
+
+### Do I need an internet connection to use VoiceMix?
+No. Once installed, VoiceMix works **completely offline**. All processing happens locally on your computer.
+
+### Can I use VoiceMix from a browser?
+No. VoiceMix is a desktop GUI application built with PyQt6. It requires installation and runs as a desktop application, not in a web browser.
+
+### What's the difference between a desktop app and a web app?
+- **Desktop App** (VoiceMix): Installed on your computer, runs locally, no URL needed
+- **Web App**: Accessed through a browser via a URL/link, runs on a server
+
+VoiceMix is a desktop application for better performance, privacy, and offline functionality.
 
 ## Documentation
 
