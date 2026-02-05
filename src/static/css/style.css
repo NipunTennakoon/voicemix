@@ -58,6 +58,34 @@ footer {
     margin-top: 50px;
 }
 
+/* Voice card styles */
+.voice-card {
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.voice-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.voice-card.selected {
+    border-color: #198754;
+    background-color: #d1e7dd;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.voice-card audio {
+    margin: 10px 0;
+}
+
+.voice-info {
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
 /* Animation for success icon */
 @keyframes fadeInScale {
     from {
@@ -70,7 +98,7 @@ footer {
     }
 }
 
-#download-section .fa-check-circle {
+#results-section .fa-check-circle {
     animation: fadeInScale 0.5s ease-out;
 }
 

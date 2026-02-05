@@ -366,6 +366,186 @@ class AudioProcessor:
                 progress_callback(-1, f"Error: {str(e)}")
             return False
     
+    def extract_voice_segments(self, input_file: str, output_dir: str, 
+                              progress_callback=None) -> Dict:
+        """
+        Extract individual voice segments from audio file
+        
+        Args:
+            input_file: Input MP3 file path
+            output_dir: Directory to save voice clips
+            progress_callback: Callback for progress updates
+            
+        Returns:
+            Dictionary with speaker information and clip paths
+        """
+        try:
+            logger.info(f"Extracting voice segments from: {input_file}")
+            output_path = Path(output_dir)
+            output_path.mkdir(exist_ok=True, parents=True)
+            
+            if progress_callback:
+                progress_callback(5, "Loading audio file...")
+            
+            # Load audio
+            audio_data, sample_rate = self.load_audio(input_file)
+            
+            if progress_callback:
+                progress_callback(15, "Performing speaker diarization...")
+            
+            # Perform diarization
+            segments = self.perform_diarization(audio_data, sample_rate)
+            
+            if len(segments) == 0:
+                logger.warning("No voice segments found")
+                return {'speakers': [], 'error': 'No voice segments detected'}
+            
+            # Group segments by speaker
+            speaker_segments = {}
+            for seg in segments:
+                speaker = seg['speaker']
+                if speaker not in speaker_segments:
+                    speaker_segments[speaker] = []
+                speaker_segments[speaker].append(seg)
+            
+            if progress_callback:
+                progress_callback(30, f"Found {len(speaker_segments)} unique voices...")
+            
+            # Extract and save clips for each speaker
+            speakers_info = []
+            for idx, (speaker_id, segs) in enumerate(speaker_segments.items()):
+                # Get the longest segment for this speaker as representative
+                longest_seg = max(segs, key=lambda s: s['end'] - s['start'])
+                
+                start_sample = int(longest_seg['start'] * sample_rate)
+                end_sample = int(longest_seg['end'] * sample_rate)
+                segment_audio = audio_data[start_sample:end_sample]
+                
+                # Save this segment
+                clip_filename = f"voice_{idx+1}.mp3"
+                clip_path = output_path / clip_filename
+                self.save_audio(segment_audio, sample_rate, str(clip_path), format="mp3")
+                
+                # Evaluate voice quality
+                quality_score = self.evaluate_voice_quality(segment_audio, sample_rate)
+                
+                speakers_info.append({
+                    'id': idx + 1,
+                    'speaker_id': speaker_id,
+                    'clip_path': str(clip_path),
+                    'clip_filename': clip_filename,
+                    'duration': longest_seg['end'] - longest_seg['start'],
+                    'quality_score': float(quality_score),
+                    'segment_count': len(segs),
+                    'all_segments': segs
+                })
+                
+                if progress_callback:
+                    progress = 30 + int(50 * (idx + 1) / len(speaker_segments))
+                    progress_callback(progress, f"Extracted voice {idx+1}/{len(speaker_segments)}...")
+            
+            # Sort by quality score (highest first)
+            speakers_info.sort(key=lambda x: x['quality_score'], reverse=True)
+            
+            if progress_callback:
+                progress_callback(100, "Voice extraction complete!")
+            
+            logger.info(f"Extracted {len(speakers_info)} voice clips")
+            return {
+                'speakers': speakers_info,
+                'audio_data': audio_data,
+                'sample_rate': sample_rate,
+                'total_speakers': len(speakers_info)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error extracting voice segments: {e}", exc_info=True)
+            if progress_callback:
+                progress_callback(-1, f"Error: {str(e)}")
+            return {'speakers': [], 'error': str(e)}
+    
+    def convert_to_selected_voice(self, audio_data: np.ndarray, sample_rate: int,
+                                  all_segments: List[Dict], selected_speaker_id: str,
+                                  output_dir: str, progress_callback=None) -> List[Dict]:
+        """
+        Convert all voice segments to match the selected voice
+        
+        Args:
+            audio_data: Original audio data
+            sample_rate: Sample rate
+            all_segments: All speaker segments
+            selected_speaker_id: ID of the selected speaker
+            output_dir: Directory to save converted clips
+            progress_callback: Callback for progress updates
+            
+        Returns:
+            List of converted clip information
+        """
+        try:
+            logger.info(f"Converting voices to match selected speaker: {selected_speaker_id}")
+            output_path = Path(output_dir)
+            output_path.mkdir(exist_ok=True, parents=True)
+            
+            # Group segments by speaker
+            speaker_segments = {}
+            for seg in all_segments:
+                speaker = seg['speaker']
+                if speaker not in speaker_segments:
+                    speaker_segments[speaker] = []
+                speaker_segments[speaker].append(seg)
+            
+            # Get reference audio from selected speaker
+            selected_segs = speaker_segments.get(selected_speaker_id, [])
+            if not selected_segs:
+                return []
+            
+            ref_seg = max(selected_segs, key=lambda s: s['end'] - s['start'])
+            ref_start = int(ref_seg['start'] * sample_rate)
+            ref_end = int(ref_seg['end'] * sample_rate)
+            reference_audio = audio_data[ref_start:ref_end]
+            
+            converted_clips = []
+            processed = 0
+            total_speakers = len([s for s in speaker_segments.keys() if s != selected_speaker_id])
+            
+            # Convert other speakers
+            for speaker_id, segs in speaker_segments.items():
+                if speaker_id == selected_speaker_id:
+                    continue
+                
+                # Get longest segment for this speaker
+                longest_seg = max(segs, key=lambda s: s['end'] - s['start'])
+                start_sample = int(longest_seg['start'] * sample_rate)
+                end_sample = int(longest_seg['end'] * sample_rate)
+                segment_audio = audio_data[start_sample:end_sample]
+                
+                # Convert voice
+                converted_audio = self.convert_voice(segment_audio, reference_audio, sample_rate)
+                
+                # Save converted clip
+                clip_filename = f"converted_voice_{speaker_id}.mp3"
+                clip_path = output_path / clip_filename
+                self.save_audio(converted_audio, sample_rate, str(clip_path), format="mp3")
+                
+                converted_clips.append({
+                    'original_speaker': speaker_id,
+                    'clip_path': str(clip_path),
+                    'clip_filename': clip_filename,
+                    'duration': longest_seg['end'] - longest_seg['start']
+                })
+                
+                processed += 1
+                if progress_callback:
+                    progress = int(100 * processed / total_speakers)
+                    progress_callback(progress, f"Converting voice {processed}/{total_speakers}...")
+            
+            logger.info(f"Converted {len(converted_clips)} voice clips")
+            return converted_clips
+            
+        except Exception as e:
+            logger.error(f"Error converting voices: {e}", exc_info=True)
+            return []
+    
     def cleanup(self):
         """Clean up temporary files"""
         logger.info("Cleaning up temporary files")
