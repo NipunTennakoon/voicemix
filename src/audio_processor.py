@@ -12,7 +12,13 @@ import soundfile as sf
 import librosa
 from pydub import AudioSegment
 from pydub.effects import normalize
-import torch
+
+# Try to import torch, but make it optional
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +35,13 @@ class AudioProcessor:
         """
         self.temp_dir = Path(temp_dir)
         self.temp_dir.mkdir(exist_ok=True)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        logger.info(f"AudioProcessor initialized with device: {self.device}")
+        
+        if TORCH_AVAILABLE:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            logger.info(f"AudioProcessor initialized with device: {self.device}")
+        else:
+            self.device = "cpu"
+            logger.info("AudioProcessor initialized (CPU only, torch not available)")
         
     def load_audio(self, file_path: str) -> Tuple[np.ndarray, int]:
         """
