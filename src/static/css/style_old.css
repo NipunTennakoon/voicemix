@@ -1,0 +1,117 @@
+/* VoiceMix Web App Styles */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.drop-zone {
+    border: 3px dashed #ccc;
+    border-radius: 10px;
+    padding: 50px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    border-color: #0d6efd;
+    background-color: #e7f3ff;
+}
+
+.drop-zone.drag-over {
+    transform: scale(1.02);
+}
+
+.card {
+    border: none;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn {
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+.btn-lg {
+    padding: 12px 30px;
+}
+
+footer {
+    margin-top: 50px;
+}
+
+/* Voice card styles */
+.voice-card {
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.voice-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.voice-card.selected {
+    border-color: #198754;
+    background-color: #d1e7dd;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.voice-card audio {
+    margin: 10px 0;
+}
+
+.voice-info {
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+/* Animation for success icon */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+#results-section .fa-check-circle {
+    animation: fadeInScale 0.5s ease-out;
+}
+
+/* Loading spinner */
+.fa-spin {
+    animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
