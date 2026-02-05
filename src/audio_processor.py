@@ -109,23 +109,47 @@ class AudioProcessor:
         """
         logger.info("Performing speaker diarization (simplified)")
         
+        # Validate input
+        if len(audio_data) == 0:
+            logger.warning("Empty audio data provided")
+            return []
+        
         # Calculate frame-level energy
         frame_length = int(0.025 * sample_rate)  # 25ms frames
         hop_length = int(0.010 * sample_rate)    # 10ms hop
+        
+        # Ensure minimum frame length
+        if frame_length < 1:
+            frame_length = 512
+        if hop_length < 1:
+            hop_length = 256
         
         # Compute energy
         energy = librosa.feature.rms(y=audio_data, 
                                     frame_length=frame_length, 
                                     hop_length=hop_length)[0]
         
-        # Voice activity detection (simple threshold-based)
-        threshold = np.mean(energy) * 0.5
+        logger.debug(f"Energy stats: mean={np.mean(energy):.6f}, max={np.max(energy):.6f}, min={np.min(energy):.6f}")
+        
+        # Voice activity detection with adaptive threshold
+        # Use percentile-based threshold instead of mean to be more robust
+        if np.max(energy) > 0:
+            # Use 25th percentile as threshold - more adaptive to varying audio levels
+            threshold = np.percentile(energy, 25) 
+            # Ensure threshold is not too low
+            threshold = max(threshold, np.max(energy) * 0.1)
+        else:
+            threshold = 0
+        
+        logger.debug(f"Voice activity threshold: {threshold:.6f}")
+        
         voice_activity = energy > threshold
         
         # Find continuous segments
         segments = []
         in_segment = False
         start_frame = 0
+        min_segment_duration = 0.3  # Reduced from 0.5s to 0.3s
         
         for i, is_voice in enumerate(voice_activity):
             if is_voice and not in_segment:
@@ -134,13 +158,36 @@ class AudioProcessor:
             elif not is_voice and in_segment:
                 start_time = start_frame * hop_length / sample_rate
                 end_time = i * hop_length / sample_rate
-                if end_time - start_time > 0.5:  # Minimum 0.5s segment
+                if end_time - start_time > min_segment_duration:
                     segments.append({
                         'start': start_time,
                         'end': end_time,
                         'speaker': f'SPEAKER_{len(segments) % 3:02d}'  # Simulate multiple speakers
                     })
                 in_segment = False
+        
+        # Handle the case where audio ends while in a segment
+        if in_segment:
+            start_time = start_frame * hop_length / sample_rate
+            end_time = len(audio_data) / sample_rate
+            if end_time - start_time > min_segment_duration:
+                segments.append({
+                    'start': start_time,
+                    'end': end_time,
+                    'speaker': f'SPEAKER_{len(segments) % 3:02d}'
+                })
+                logger.debug("Added final segment that extended to end of audio")
+        
+        # Fallback: if no segments detected, treat entire audio as one segment
+        if len(segments) == 0:
+            logger.warning("No segments detected with current threshold, using entire audio as one segment")
+            audio_duration = len(audio_data) / sample_rate
+            if audio_duration > 0.1:  # At least 100ms of audio
+                segments.append({
+                    'start': 0.0,
+                    'end': audio_duration,
+                    'speaker': 'SPEAKER_00'
+                })
         
         logger.info(f"Found {len(segments)} voice segments")
         return segments
