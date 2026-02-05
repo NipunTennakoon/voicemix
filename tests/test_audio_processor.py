@@ -69,6 +69,67 @@ class TestAudioProcessor:
             assert 'end' in seg
             assert seg['end'] > seg['start']
     
+    def test_diarization_quiet_audio(self):
+        """Test diarization with quiet audio - should not fail"""
+        sample_rate = 16000
+        duration = 2.0
+        
+        t = np.linspace(0, duration, int(sample_rate * duration))
+        
+        # Create very quiet audio (amplitude 0.1)
+        audio = 0.1 * np.sin(2 * np.pi * 440 * t).astype(np.float32)
+        
+        segments = self.processor.perform_diarization(audio, sample_rate)
+        
+        # Should detect at least one segment (fallback to entire audio)
+        assert isinstance(segments, list)
+        assert len(segments) > 0, "Should detect at least one segment for quiet audio"
+        assert segments[0]['end'] > segments[0]['start']
+    
+    def test_diarization_short_audio(self):
+        """Test diarization with short audio clips"""
+        sample_rate = 16000
+        duration = 0.5  # Very short - 500ms
+        
+        t = np.linspace(0, duration, int(sample_rate * duration))
+        audio = np.sin(2 * np.pi * 440 * t).astype(np.float32)
+        
+        segments = self.processor.perform_diarization(audio, sample_rate)
+        
+        # Should detect at least one segment
+        assert isinstance(segments, list)
+        assert len(segments) > 0, "Should detect at least one segment for short audio"
+    
+    def test_diarization_continuous_speech(self):
+        """Test diarization when audio has continuous speech (no silence)"""
+        sample_rate = 16000
+        duration = 3.0
+        
+        t = np.linspace(0, duration, int(sample_rate * duration))
+        # Continuous audio signal
+        audio = np.sin(2 * np.pi * 440 * t).astype(np.float32)
+        
+        segments = self.processor.perform_diarization(audio, sample_rate)
+        
+        # Should detect at least one segment covering most of the audio
+        assert isinstance(segments, list)
+        assert len(segments) > 0, "Should detect segments for continuous audio"
+        
+        # The total coverage should be significant
+        total_duration = sum(seg['end'] - seg['start'] for seg in segments)
+        assert total_duration >= 2.0, "Should detect a significant portion of continuous audio"
+    
+    def test_diarization_empty_audio(self):
+        """Test diarization with empty audio array"""
+        sample_rate = 16000
+        audio = np.array([], dtype=np.float32)
+        
+        segments = self.processor.perform_diarization(audio, sample_rate)
+        
+        # Should return empty list for empty audio
+        assert isinstance(segments, list)
+        assert len(segments) == 0, "Empty audio should return no segments"
+    
     def test_voice_conversion(self):
         """Test voice conversion"""
         sample_rate = 16000
