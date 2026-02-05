@@ -3,145 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoiceMix - MP3 Voice Processor</title>
+    <title>VoiceMix - Voice Transfer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_v2.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-primary">
-        <div class="container">
-            <span class="navbar-brand mb-0 h1">
-                <i class="fas fa-music"></i> VoiceMix - MP3 Voice Processor
-            </span>
-        </div>
-    </nav>
-
-    <div class="container mt-5">
-        <!-- Header Section -->
-        <div class="row mb-4">
-            <div class="col-12 text-center">
-                <h2>Separate and Unify Multiple Voices</h2>
-                <p class="text-muted">Upload an MP3 file, review each voice separately, select your preferred voice, and convert others to match it</p>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <header class="text-center py-4">
+                    <h1 class="display-4"><i class="fas fa-exchange-alt"></i> VoiceMix</h1>
+                    <p class="lead">Transfer voice characteristics between audio files</p>
+                </header>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="row">
-            <div class="col-lg-10 offset-lg-1">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
                 
-                <!-- Step 1: Upload Section -->
-                <div class="card shadow-sm mb-4" id="upload-section">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0"><i class="fas fa-upload"></i> Step 1: Upload MP3 File</h5>
-                    </div>
+                <!-- Step 1: Upload Source Voice -->
+                <div id="step1" class="card mb-4">
                     <div class="card-body">
-                        <div class="drop-zone" id="dropZone">
-                            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-primary"></i>
-                            <p class="mb-2"><strong>Drag & Drop your MP3 file here</strong></p>
-                            <p class="text-muted">or</p>
-                            <label for="fileInput" class="btn btn-primary">
+                        <h3 class="card-title">
+                            <span class="step-number">1</span>
+                            Upload Source Voice
+                        </h3>
+                        <p class="text-muted">Upload the MP3 file containing the voice you want to use</p>
+                        
+                        <div id="sourceDropZone" class="upload-zone">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                            <p class="mb-2">Drag & drop your source MP3 file here</p>
+                            <p class="text-muted small">or</p>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('sourceFileInput').click()">
                                 <i class="fas fa-folder-open"></i> Browse Files
-                            </label>
-                            <input type="file" id="fileInput" accept=".mp3" style="display: none;">
+                            </button>
+                            <input type="file" id="sourceFileInput" accept=".mp3" style="display: none;">
+                            <p class="text-muted small mt-3">Maximum file size: 500MB</p>
                         </div>
-                        <div id="fileInfo" class="mt-3" style="display: none;">
-                            <div class="alert alert-info">
-                                <i class="fas fa-file-audio"></i> <strong>Selected:</strong> <span id="fileName"></span>
+                        
+                        <div id="sourceFileInfo" class="file-info mt-3" style="display: none;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fas fa-file-audio text-success"></i>
+                                    <span id="sourceFileName" class="ms-2"></span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="clearSource()">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                            <audio id="sourceAudio" controls class="w-100 mt-3"></audio>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Upload Target Audio -->
+                <div id="step2" class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title">
+                            <span class="step-number">2</span>
+                            Upload Target Audio
+                        </h3>
+                        <p class="text-muted">Upload the MP3 file containing the content you want to convert</p>
+                        
+                        <div id="targetDropZone" class="upload-zone">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                            <p class="mb-2">Drag & drop your target MP3 file here</p>
+                            <p class="text-muted small">or</p>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('targetFileInput').click()">
+                                <i class="fas fa-folder-open"></i> Browse Files
+                            </button>
+                            <input type="file" id="targetFileInput" accept=".mp3" style="display: none;">
+                            <p class="text-muted small mt-3">Maximum file size: 500MB</p>
+                        </div>
+                        
+                        <div id="targetFileInfo" class="file-info mt-3" style="display: none;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fas fa-file-audio text-success"></i>
+                                    <span id="targetFileName" class="ms-2"></span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="clearTarget()">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                            <audio id="targetAudio" controls class="w-100 mt-3"></audio>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Process -->
+                <div id="step3" class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title">
+                            <span class="step-number">3</span>
+                            Transfer Voice
+                        </h3>
+                        <p class="text-muted">Convert the target audio to use the source voice</p>
+                        
+                        <div class="text-center">
+                            <button id="transferBtn" class="btn btn-lg btn-success" onclick="startTransfer()" disabled>
+                                <i class="fas fa-magic"></i> Transfer Voice
+                            </button>
+                        </div>
+                        
+                        <div id="processingSection" class="mt-4" style="display: none;">
+                            <div class="progress-container">
+                                <div class="progress">
+                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" style="width: 0%">0%</div>
+                                </div>
+                                <p id="statusMessage" class="text-center mt-2">Starting...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Step 2: Analyzing Section -->
-                <div class="card shadow-sm mb-4" id="analyzing-section" style="display: none;">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0"><i class="fas fa-cog fa-spin"></i> Step 2: Analyzing Audio</h5>
-                    </div>
+                <!-- Step 4: Download -->
+                <div id="step4" class="card mb-4" style="display: none;">
                     <div class="card-body">
-                        <div class="progress mb-3" style="height: 30px;">
-                            <div id="analyzeProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                                 role="progressbar" style="width: 0%">0%</div>
-                        </div>
-                        <p id="analyzeStatusMessage" class="text-center text-muted">Analyzing voices...</p>
-                    </div>
-                </div>
-
-                <!-- Step 3: Voice Selection Section -->
-                <div class="card shadow-sm mb-4" id="voice-selection-section" style="display: none;">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0"><i class="fas fa-users"></i> Step 3: Select Your Preferred Voice</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-4">We've identified <strong id="voiceCount">0</strong> unique voices. Listen to each one and select which voice you want all others to be converted to.</p>
-                        <div id="voiceClipsContainer" class="row">
-                            <!-- Voice clips will be dynamically added here -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 4: Converting Section -->
-                <div class="card shadow-sm mb-4" id="converting-section" style="display: none;">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0"><i class="fas fa-cog fa-spin"></i> Step 4: Converting Voices</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="progress mb-3" style="height: 30px;">
-                            <div id="convertProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                                 role="progressbar" style="width: 0%">0%</div>
-                        </div>
-                        <p id="convertStatusMessage" class="text-center text-muted">Converting voices...</p>
-                    </div>
-                </div>
-
-                <!-- Step 5: Results Section -->
-                <div class="card shadow-sm mb-4" id="results-section" style="display: none;">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-check-circle"></i> Step 5: Download Converted Clips</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> Voice conversion complete! All voices have been converted to match your selected voice.
-                        </div>
-                        <p class="mb-3">Download the converted voice clips below:</p>
-                        <div id="convertedClipsContainer" class="row">
-                            <!-- Converted clips will be dynamically added here -->
-                        </div>
-                        <div class="text-center mt-4">
-                            <button id="processAnotherBtn" class="btn btn-primary btn-lg">
+                        <h3 class="card-title">
+                            <span class="step-number">4</span>
+                            Download Result
+                        </h3>
+                        <p class="text-muted">Your voice transfer is complete!</p>
+                        
+                        <div class="text-center">
+                            <div class="success-animation mb-4">
+                                <i class="fas fa-check-circle fa-5x text-success"></i>
+                            </div>
+                            
+                            <p class="mb-4">Preview your converted audio:</p>
+                            <audio id="resultAudio" controls class="w-100 mb-4"></audio>
+                            
+                            <button class="btn btn-lg btn-success me-2" onclick="downloadFile()">
+                                <i class="fas fa-download"></i> Download Converted File
+                            </button>
+                            <button class="btn btn-lg btn-outline-primary" onclick="resetApp()">
                                 <i class="fas fa-redo"></i> Process Another File
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Error Section -->
-                <div class="card shadow-sm mb-4" id="error-section" style="display: none;">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0"><i class="fas fa-exclamation-circle"></i> Error</h5>
-                    </div>
+                <!-- How It Works -->
+                <div class="card mb-4">
                     <div class="card-body">
-                        <p id="errorMessage" class="text-danger"></p>
-                        <button id="resetErrorBtn" class="btn btn-primary">
-                            <i class="fas fa-redo"></i> Try Again
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Info Section -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> How It Works</h5>
-                    </div>
-                    <div class="card-body">
-                        <ol class="mb-0">
-                            <li><strong>Upload:</strong> Upload your MP3 file with multiple speakers</li>
-                            <li><strong>Analysis:</strong> We identify and separate each unique voice</li>
-                            <li><strong>Review:</strong> Listen to each voice clip separately</li>
-                            <li><strong>Select:</strong> Choose which voice should be the target voice</li>
-                            <li><strong>Convert:</strong> All other voices are converted to match your selection</li>
-                            <li><strong>Download:</strong> Get the converted voice clips individually</li>
-                        </ol>
+                        <h4 class="card-title"><i class="fas fa-info-circle"></i> How It Works</h4>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-microphone text-primary"></i> Source Voice</h5>
+                                <p class="text-muted">Upload an MP3 file with the voice you want to use. This provides the voice characteristics (pitch, tone, timbre) that will be applied.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-file-audio text-primary"></i> Target Audio</h5>
+                                <p class="text-muted">Upload an MP3 file with the content you want to convert. The words/content will be preserved, but spoken in the source voice.</p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h5><i class="fas fa-magic text-primary"></i> Voice Transfer</h5>
+                            <p class="text-muted">The system analyzes both files, identifies voice segments (filtering background sounds), extracts voice characteristics from the source, and applies them to the target audio. The result is the target content spoken in the source voice.</p>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-lightbulb"></i>
+                            <strong>Example:</strong> If your source says "I love apple" in a female voice, and your target says "I live in Village" in a male voice, the output will be "I live in Village" spoken in the female voice.
+                        </div>
                     </div>
                 </div>
 
@@ -149,13 +175,7 @@
         </div>
     </div>
 
-    <footer class="mt-5 py-3 bg-light">
-        <div class="container text-center text-muted">
-            <p class="mb-0">VoiceMix © 2026 - MP3 Voice Processing Tool</p>
-        </div>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main_v2.js') }}"></script>
 </body>
 </html>

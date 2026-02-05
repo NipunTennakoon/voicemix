@@ -593,6 +593,192 @@ class AudioProcessor:
             logger.error(f"Error converting voices: {e}", exc_info=True)
             return []
     
+    def detect_voice_activity(self, audio_data: np.ndarray, sample_rate: int) -> np.ndarray:
+        """
+        Detect voice activity to filter out background sounds
+        
+        Args:
+            audio_data: Audio samples
+            sample_rate: Sample rate
+            
+        Returns:
+            Boolean mask where True indicates voice activity
+        """
+        # Frame-based energy calculation
+        frame_length = int(0.025 * sample_rate)  # 25ms frames
+        hop_length = int(0.010 * sample_rate)    # 10ms hop
+        
+        # Calculate energy for each frame
+        energy = []
+        for i in range(0, len(audio_data) - frame_length, hop_length):
+            frame = audio_data[i:i + frame_length]
+            frame_energy = np.sum(frame ** 2)
+            energy.append(frame_energy)
+        
+        energy = np.array(energy)
+        
+        if len(energy) == 0:
+            return np.ones(len(audio_data), dtype=bool)
+        
+        # Adaptive threshold based on energy distribution
+        threshold = np.percentile(energy, 40)  # 40th percentile
+        threshold = max(threshold, np.max(energy) * 0.15)  # At least 15% of max
+        
+        # Create frame-level mask
+        voice_frames = energy > threshold
+        
+        # Expand frame mask to sample mask
+        voice_mask = np.zeros(len(audio_data), dtype=bool)
+        for i, is_voice in enumerate(voice_frames):
+            start_idx = i * hop_length
+            end_idx = min(start_idx + hop_length, len(audio_data))
+            if is_voice:
+                voice_mask[start_idx:end_idx] = True
+        
+        # Apply morphological operations to clean up mask
+        # Remove isolated voice frames (noise)
+        kernel_size = int(0.1 * sample_rate)  # 100ms
+        if kernel_size > 0:
+            # Simple smoothing by convolution
+            kernel = np.ones(kernel_size) / kernel_size
+            smooth_mask = np.convolve(voice_mask.astype(float), kernel, mode='same')
+            voice_mask = smooth_mask > 0.5
+        
+        return voice_mask
+    
+    def transfer_voice(self, source_path: str, target_path: str, output_path: str,
+                      progress_callback=None) -> bool:
+        """
+        Transfer voice characteristics from source to target audio
+        
+        Args:
+            source_path: Path to source audio file (reference voice)
+            target_path: Path to target audio file (content to convert)
+            output_path: Path to save output file
+            progress_callback: Callback for progress updates
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            logger.info(f"Starting voice transfer from {source_path} to {target_path}")
+            
+            if progress_callback:
+                progress_callback(5, "Loading source audio...")
+            
+            # Load source audio
+            source_audio, source_sr = self.load_audio(source_path)
+            
+            if progress_callback:
+                progress_callback(15, "Loading target audio...")
+            
+            # Load target audio
+            target_audio, target_sr = self.load_audio(target_path)
+            
+            # Resample if needed
+            if source_sr != target_sr:
+                logger.info(f"Resampling source from {source_sr} to {target_sr}")
+                source_audio = librosa.resample(source_audio, orig_sr=source_sr, target_sr=target_sr)
+                source_sr = target_sr
+            
+            sample_rate = target_sr
+            
+            if progress_callback:
+                progress_callback(25, "Detecting voice activity in source...")
+            
+            # Detect voice activity in both audios
+            source_voice_mask = self.detect_voice_activity(source_audio, sample_rate)
+            
+            if progress_callback:
+                progress_callback(35, "Detecting voice activity in target...")
+            
+            target_voice_mask = self.detect_voice_activity(target_audio, sample_rate)
+            
+            # Extract only voice portions
+            source_voice = source_audio[source_voice_mask]
+            target_voice = target_audio[target_voice_mask]
+            
+            if len(source_voice) < sample_rate * 0.1 or len(target_voice) < sample_rate * 0.1:
+                logger.error("Insufficient voice data detected")
+                if progress_callback:
+                    progress_callback(-1, "Error: Not enough voice detected in audio files")
+                return False
+            
+            if progress_callback:
+                progress_callback(50, "Extracting voice characteristics from source...")
+            
+            # Extract pitch from source voice
+            source_f0 = librosa.yin(source_voice,
+                                   fmin=librosa.note_to_hz('C2'),
+                                   fmax=librosa.note_to_hz('C7'),
+                                   sr=sample_rate,
+                                   frame_length=2048)
+            
+            if progress_callback:
+                progress_callback(60, "Extracting voice characteristics from target...")
+            
+            # Extract pitch from target voice  
+            target_f0 = librosa.yin(target_voice,
+                                   fmin=librosa.note_to_hz('C2'),
+                                   fmax=librosa.note_to_hz('C7'),
+                                   sr=sample_rate,
+                                   frame_length=2048)
+            
+            if progress_callback:
+                progress_callback(70, "Calculating voice transformation...")
+            
+            # Calculate pitch shift needed
+            source_f0_valid = source_f0[source_f0 > 0]
+            target_f0_valid = target_f0[target_f0 > 0]
+            
+            if len(source_f0_valid) > 0 and len(target_f0_valid) > 0:
+                source_f0_mean = np.median(source_f0_valid)
+                target_f0_mean = np.median(target_f0_valid)
+                
+                # Calculate semitone shift
+                pitch_shift_semitones = 12 * np.log2(source_f0_mean / target_f0_mean)
+                pitch_shift_semitones = np.clip(pitch_shift_semitones, -12, 12)
+                
+                logger.info(f"Pitch shift: {pitch_shift_semitones:.2f} semitones")
+            else:
+                logger.warning("Could not extract pitch, using no shift")
+                pitch_shift_semitones = 0
+            
+            if progress_callback:
+                progress_callback(80, "Applying voice transformation to target...")
+            
+            # Apply pitch shift to entire target audio (including non-voice parts)
+            converted_audio = librosa.effects.pitch_shift(
+                target_audio,
+                sr=sample_rate,
+                n_steps=pitch_shift_semitones
+            )
+            
+            # Apply additional formant-like processing for better voice matching
+            # Use a spectral envelope approach
+            if abs(pitch_shift_semitones) > 0.5:
+                # Apply pre-emphasis to enhance high frequencies if shifting up
+                if pitch_shift_semitones > 0:
+                    converted_audio = librosa.effects.preemphasis(converted_audio, coef=0.95)
+            
+            if progress_callback:
+                progress_callback(90, "Saving converted audio...")
+            
+            # Save the output
+            self.save_audio(converted_audio, sample_rate, output_path, format="mp3")
+            
+            if progress_callback:
+                progress_callback(100, "Voice transfer complete!")
+            
+            logger.info("Voice transfer completed successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error during voice transfer: {e}", exc_info=True)
+            if progress_callback:
+                progress_callback(-1, f"Error: {str(e)}")
+            return False
+    
     def cleanup(self):
         """Clean up temporary files"""
         logger.info("Cleaning up temporary files")

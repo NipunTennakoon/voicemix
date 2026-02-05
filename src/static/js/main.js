@@ -1,393 +1,345 @@
-// VoiceMix Web App JavaScript - Enhanced with Voice Selection
+// VoiceMix V2 - Two-File Upload JavaScript
 
-let selectedFile = null;
-let statusCheckInterval = null;
-let selectedVoiceId = null;
+let sourceFile = null;
+let targetFile = null;
+let processingInterval = null;
 
-// DOM Elements
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const fileInfo = document.getElementById('fileInfo');
-const fileName = document.getElementById('fileName');
-
-const uploadSection = document.getElementById('upload-section');
-const analyzingSection = document.getElementById('analyzing-section');
-const voiceSelectionSection = document.getElementById('voice-selection-section');
-const convertingSection = document.getElementById('converting-section');
-const resultsSection = document.getElementById('results-section');
-const errorSection = document.getElementById('error-section');
-
-const analyzeProgressBar = document.getElementById('analyzeProgressBar');
-const analyzeStatusMessage = document.getElementById('analyzeStatusMessage');
-const convertProgressBar = document.getElementById('convertProgressBar');
-const convertStatusMessage = document.getElementById('convertStatusMessage');
-
-const errorMessage = document.getElementById('errorMessage');
-const resetErrorBtn = document.getElementById('resetErrorBtn');
-const processAnotherBtn = document.getElementById('processAnotherBtn');
-
-// Prevent default drag behaviors
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-    document.body.addEventListener(eventName, preventDefaults, false);
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setupSourceUpload();
+    setupTargetUpload();
 });
 
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-// Highlight drop zone when dragging over it
-['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => {
+// Source file upload setup
+function setupSourceUpload() {
+    const dropZone = document.getElementById('sourceDropZone');
+    const fileInput = document.getElementById('sourceFileInput');
+    
+    // Click to browse
+    dropZone.addEventListener('click', function(e) {
+        if (e.target === dropZone || e.target.closest('.upload-zone')) {
+            fileInput.click();
+        }
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleSourceFile(e.target.files[0]);
+        }
+    });
+    
+    // Drag and drop
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         dropZone.classList.add('drag-over');
-    }, false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => {
+    });
+    
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         dropZone.classList.remove('drag-over');
-    }, false);
-});
-
-// Handle dropped files
-dropZone.addEventListener('drop', (e) => {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    handleFiles(files);
-}, false);
-
-// Handle click on drop zone
-dropZone.addEventListener('click', () => {
-    fileInput.click();
-});
-
-// Handle file selection from input
-fileInput.addEventListener('change', (e) => {
-    handleFiles(e.target.files);
-});
-
-// Handle files
-function handleFiles(files) {
-    if (files.length === 0) return;
+    });
     
-    const file = files[0];
-    
-    // Validate file type
-    if (!file.name.toLowerCase().endsWith('.mp3')) {
-        showError('Please select an MP3 file');
-        return;
-    }
-    
-    // Validate file size (500 MB)
-    if (file.size > 500 * 1024 * 1024) {
-        showError('File size exceeds 500 MB limit');
-        return;
-    }
-    
-    selectedFile = file;
-    fileName.textContent = file.name;
-    fileInfo.style.display = 'block';
-    
-    // Automatically start analysis
-    analyzeFile();
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drag-over');
+        
+        if (e.dataTransfer.files.length > 0) {
+            handleSourceFile(e.dataTransfer.files[0]);
+        }
+    });
 }
 
-// Analyze file and extract voices
-function analyzeFile() {
-    if (!selectedFile) return;
+// Target file upload setup
+function setupTargetUpload() {
+    const dropZone = document.getElementById('targetDropZone');
+    const fileInput = document.getElementById('targetFileInput');
     
+    // Click to browse
+    dropZone.addEventListener('click', function(e) {
+        if (e.target === dropZone || e.target.closest('.upload-zone')) {
+            fileInput.click();
+        }
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleTargetFile(e.target.files[0]);
+        }
+    });
+    
+    // Drag and drop
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('drag-over');
+    });
+    
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drag-over');
+    });
+    
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drag-over');
+        
+        if (e.dataTransfer.files.length > 0) {
+            handleTargetFile(e.dataTransfer.files[0]);
+        }
+    });
+}
+
+// Handle source file
+function handleSourceFile(file) {
+    if (!file.name.toLowerCase().endsWith('.mp3')) {
+        alert('Please select an MP3 file');
+        return;
+    }
+    
+    if (file.size > 500 * 1024 * 1024) {
+        alert('File size exceeds 500MB limit');
+        return;
+    }
+    
+    sourceFile = file;
+    
+    // Show file info
+    document.getElementById('sourceFileName').textContent = file.name;
+    document.getElementById('sourceDropZone').style.display = 'none';
+    document.getElementById('sourceFileInfo').style.display = 'block';
+    
+    // Set audio preview
+    const audio = document.getElementById('sourceAudio');
+    audio.src = URL.createObjectURL(file);
+    
+    // Upload file
+    uploadSourceFile(file);
+}
+
+// Handle target file
+function handleTargetFile(file) {
+    if (!file.name.toLowerCase().endsWith('.mp3')) {
+        alert('Please select an MP3 file');
+        return;
+    }
+    
+    if (file.size > 500 * 1024 * 1024) {
+        alert('File size exceeds 500MB limit');
+        return;
+    }
+    
+    targetFile = file;
+    
+    // Show file info
+    document.getElementById('targetFileName').textContent = file.name;
+    document.getElementById('targetDropZone').style.display = 'none';
+    document.getElementById('targetFileInfo').style.display = 'block';
+    
+    // Set audio preview
+    const audio = document.getElementById('targetAudio');
+    audio.src = URL.createObjectURL(file);
+    
+    // Upload file
+    uploadTargetFile(file);
+}
+
+// Upload source file
+function uploadSourceFile(file) {
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    formData.append('file', file);
     
-    // Show analyzing section
-    analyzingSection.style.display = 'block';
-    uploadSection.style.display = 'none';
-    errorSection.style.display = 'none';
-    
-    fetch('/analyze', {
+    fetch('/upload_source', {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            showError(data.error);
+            alert('Error uploading source file: ' + data.error);
+            clearSource();
         } else {
-            // Start checking status for voice extraction
-            startStatusCheck('analyzing');
+            console.log('Source file uploaded successfully');
+            checkTransferReady();
         }
     })
     .catch(error => {
-        showError('Upload failed: ' + error.message);
+        console.error('Error:', error);
+        alert('Error uploading source file');
+        clearSource();
     });
 }
 
-// Start checking processing status
-function startStatusCheck(stage) {
-    statusCheckInterval = setInterval(() => checkStatus(stage), 1000);
+// Upload target file
+function uploadTargetFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/upload_target', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error uploading target file: ' + data.error);
+            clearTarget();
+        } else {
+            console.log('Target file uploaded successfully');
+            checkTransferReady();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error uploading target file');
+        clearTarget();
+    });
 }
 
-// Check processing status
-function checkStatus(stage) {
+// Check if both files are uploaded
+function checkTransferReady() {
+    const transferBtn = document.getElementById('transferBtn');
+    if (sourceFile && targetFile) {
+        transferBtn.disabled = false;
+    } else {
+        transferBtn.disabled = true;
+    }
+}
+
+// Clear source file
+function clearSource() {
+    sourceFile = null;
+    document.getElementById('sourceDropZone').style.display = 'block';
+    document.getElementById('sourceFileInfo').style.display = 'none';
+    document.getElementById('sourceFileInput').value = '';
+    checkTransferReady();
+}
+
+// Clear target file
+function clearTarget() {
+    targetFile = null;
+    document.getElementById('targetDropZone').style.display = 'block';
+    document.getElementById('targetFileInfo').style.display = 'none';
+    document.getElementById('targetFileInput').value = '';
+    checkTransferReady();
+}
+
+// Start voice transfer
+function startTransfer() {
+    if (!sourceFile || !targetFile) {
+        alert('Please upload both source and target files');
+        return;
+    }
+    
+    // Disable button
+    document.getElementById('transferBtn').disabled = true;
+    
+    // Show processing section
+    document.getElementById('processingSection').style.display = 'block';
+    
+    // Start transfer
+    fetch('/transfer_voice', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+            document.getElementById('processingSection').style.display = 'none';
+            document.getElementById('transferBtn').disabled = false;
+        } else {
+            // Start polling for status
+            startStatusPolling();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error starting voice transfer');
+        document.getElementById('processingSection').style.display = 'none';
+        document.getElementById('transferBtn').disabled = false;
+    });
+}
+
+// Poll for processing status
+function startStatusPolling() {
+    processingInterval = setInterval(checkStatus, 1000);
+}
+
+function checkStatus() {
     fetch('/status')
     .then(response => response.json())
     .then(data => {
-        if (stage === 'analyzing') {
-            updateAnalyzeProgress(data.progress, data.message);
-            
-            if (data.status === 'voices_extracted') {
-                clearInterval(statusCheckInterval);
-                loadVoices();
-            } else if (data.status === 'error') {
-                clearInterval(statusCheckInterval);
-                showError(data.message);
-            }
-        } else if (stage === 'converting') {
-            updateConvertProgress(data.progress, data.message);
-            
-            if (data.status === 'converted') {
-                clearInterval(statusCheckInterval);
-                showResults();
-            } else if (data.status === 'error') {
-                clearInterval(statusCheckInterval);
-                showError(data.message);
-            }
+        const progress = data.progress || 0;
+        const message = data.message || 'Processing...';
+        const status = data.status;
+        
+        // Update progress bar
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = progress + '%';
+        progressBar.textContent = progress + '%';
+        
+        // Update status message
+        document.getElementById('statusMessage').textContent = message;
+        
+        // Check if complete
+        if (status === 'complete') {
+            clearInterval(processingInterval);
+            showResults();
+        } else if (status === 'error') {
+            clearInterval(processingInterval);
+            alert('Error: ' + message);
+            document.getElementById('processingSection').style.display = 'none';
+            document.getElementById('transferBtn').disabled = false;
         }
     })
     .catch(error => {
-        console.error('Status check failed:', error);
+        console.error('Error checking status:', error);
     });
 }
 
-// Update analyze progress bar
-function updateAnalyzeProgress(progress, message) {
-    analyzeProgressBar.style.width = progress + '%';
-    analyzeProgressBar.textContent = progress + '%';
-    analyzeStatusMessage.textContent = message;
-}
-
-// Update convert progress bar
-function updateConvertProgress(progress, message) {
-    convertProgressBar.style.width = progress + '%';
-    convertProgressBar.textContent = progress + '%';
-    convertStatusMessage.textContent = message;
-}
-
-// Load extracted voices
-function loadVoices() {
-    fetch('/get_voices')
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
-        
-        displayVoices(data.voices, data.total_speakers);
-    })
-    .catch(error => {
-        showError('Failed to load voices: ' + error.message);
-    });
-}
-
-// Display voice clips for selection
-function displayVoices(voices, totalSpeakers) {
-    analyzingSection.style.display = 'none';
-    voiceSelectionSection.style.display = 'block';
-    
-    document.getElementById('voiceCount').textContent = totalSpeakers;
-    
-    const container = document.getElementById('voiceClipsContainer');
-    container.innerHTML = '';
-    
-    voices.forEach(voice => {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 mb-4';
-        
-        const card = document.createElement('div');
-        card.className = 'card voice-card';
-        card.innerHTML = `
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="fas fa-microphone"></i> Voice ${voice.id}
-                </h5>
-                <div class="mb-3">
-                    <audio controls class="w-100" id="audio-${voice.id}">
-                        <source src="/download_voice/${voice.id}" type="audio/mpeg">
-                        Your browser does not support the audio element.
-                    </audio>
-                </div>
-                <div class="voice-info mb-3">
-                    <small class="text-muted">
-                        <i class="fas fa-clock"></i> Duration: ${voice.duration.toFixed(2)}s &nbsp;
-                        <i class="fas fa-star"></i> Quality: ${voice.quality_score.toFixed(2)}
-                    </small>
-                </div>
-                <button class="btn btn-primary w-100 select-voice-btn" data-voice-id="${voice.id}">
-                    <i class="fas fa-check-circle"></i> Select This Voice
-                </button>
-            </div>
-        `;
-        
-        col.appendChild(card);
-        container.appendChild(col);
-    });
-    
-    // Add event listeners to select buttons
-    document.querySelectorAll('.select-voice-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const voiceId = parseInt(this.dataset.voiceId);
-            selectVoice(voiceId);
-        });
-    });
-}
-
-// Select a voice and start conversion
-function selectVoice(voiceId) {
-    selectedVoiceId = voiceId;
-    
-    // Highlight selected voice
-    document.querySelectorAll('.voice-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    event.target.closest('.voice-card').classList.add('selected');
-    
-    // Show converting section
-    voiceSelectionSection.style.display = 'none';
-    convertingSection.style.display = 'block';
-    
-    // Start conversion
-    fetch('/select_voice', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ voice_id: voiceId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            showError(data.error);
-        } else {
-            // Start checking conversion status
-            startStatusCheck('converting');
-        }
-    })
-    .catch(error => {
-        showError('Voice selection failed: ' + error.message);
-    });
-}
-
-// Show results with converted clips
+// Show results
 function showResults() {
-    fetch('/get_converted_clips')
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
-        
-        displayConvertedClips(data.clips, data.selected_voice);
-    })
-    .catch(error => {
-        showError('Failed to load results: ' + error.message);
-    });
+    document.getElementById('processingSection').style.display = 'none';
+    document.getElementById('step4').style.display = 'block';
+    
+    // Set result audio source
+    const resultAudio = document.getElementById('resultAudio');
+    resultAudio.src = '/download';
+    
+    // Scroll to results
+    document.getElementById('step4').scrollIntoView({ behavior: 'smooth' });
 }
 
-// Display converted clips for download
-function displayConvertedClips(clips, selectedVoice) {
-    convertingSection.style.display = 'none';
-    resultsSection.style.display = 'block';
-    
-    const container = document.getElementById('convertedClipsContainer');
-    container.innerHTML = '';
-    
-    // Add info about selected voice
-    const info = document.createElement('div');
-    info.className = 'col-12 mb-4';
-    info.innerHTML = `
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> <strong>Selected Voice:</strong> Voice ${selectedVoice}
-            <br>All other voices have been converted to match this voice.
-        </div>
-    `;
-    container.appendChild(info);
-    
-    // Display each converted clip
-    clips.forEach((clip, index) => {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 mb-3';
-        
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="card-body">
-                <h6 class="card-title">
-                    <i class="fas fa-file-audio"></i> Converted Clip ${index + 1}
-                </h6>
-                <div class="mb-3">
-                    <audio controls class="w-100">
-                        <source src="/download_converted/${clip.clip_filename}" type="audio/mpeg">
-                        Your browser does not support the audio element.
-                    </audio>
-                </div>
-                <small class="text-muted d-block mb-2">
-                    <i class="fas fa-clock"></i> Duration: ${clip.duration.toFixed(2)}s
-                </small>
-                <a href="/download_converted/${clip.clip_filename}" 
-                   class="btn btn-success btn-sm w-100" download>
-                    <i class="fas fa-download"></i> Download
-                </a>
-            </div>
-        `;
-        
-        col.appendChild(card);
-        container.appendChild(col);
-    });
+// Download file
+function downloadFile() {
+    window.location.href = '/download';
 }
 
-// Show error
-function showError(message) {
-    clearInterval(statusCheckInterval);
-    uploadSection.style.display = 'none';
-    analyzingSection.style.display = 'none';
-    voiceSelectionSection.style.display = 'none';
-    convertingSection.style.display = 'none';
-    resultsSection.style.display = 'none';
-    errorSection.style.display = 'block';
-    errorMessage.textContent = message;
-}
-
-// Reset and start over
+// Reset app
 function resetApp() {
-    fetch('/reset')
-    .then(response => response.json())
-    .then(data => {
-        // Reset UI
-        selectedFile = null;
-        selectedVoiceId = null;
-        fileInput.value = '';
-        fileInfo.style.display = 'none';
-        uploadSection.style.display = 'block';
-        analyzingSection.style.display = 'none';
-        voiceSelectionSection.style.display = 'none';
-        convertingSection.style.display = 'none';
-        resultsSection.style.display = 'none';
-        errorSection.style.display = 'none';
-        
-        analyzeProgressBar.style.width = '0%';
-        analyzeProgressBar.textContent = '0%';
-        convertProgressBar.style.width = '0%';
-        convertProgressBar.textContent = '0%';
-    })
-    .catch(error => {
-        console.error('Reset failed:', error);
-        location.reload();
+    // Clear files
+    clearSource();
+    clearTarget();
+    
+    // Hide sections
+    document.getElementById('processingSection').style.display = 'none';
+    document.getElementById('step4').style.display = 'none';
+    
+    // Reset progress
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressBar').textContent = '0%';
+    
+    // Reset session on server
+    fetch('/reset', {
+        method: 'POST'
     });
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-// Event listeners for reset buttons
-resetErrorBtn.addEventListener('click', resetApp);
-processAnotherBtn.addEventListener('click', resetApp);
